@@ -1,5 +1,3 @@
-#include <iostream>
-#include <opencv4/opencv2/opencv.hpp>
 #include "front.h"
 
 using namespace std;
@@ -23,8 +21,8 @@ int main() {
     //  define the index
     int count = 0;
 
-    // define the feature extractor and matcher
-    cv::Ptr<cv::FeatureDetector> detector = cv::ORB::create();
+
+    cv::VideoWriter writer("/home/wondong/code/cpp/output.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 25, cv::Size(1280, cap.get(cv::CAP_PROP_FRAME_HEIGHT)));
 
     while (true){
         cap >> frame;
@@ -33,24 +31,26 @@ int main() {
             
             // 1. keypoint extraction on each images
             std::vector<cv::KeyPoint> keypoints1, keypoints2;
+            // std::vector<cv::Point2f> keypoints1, keypoints2;
+                    
             cv::Mat descriptor1, descriptor2;
+            std::vector<cv::DMatch> goodMatches; 
 
-            FeatureExtraction(frame, prev_frame, keypoints1, descriptor1, keypoints2, descriptor2);
-            cout << "keypoints1 shape : " << keypoints1.size() << endl;
-            cout << "keypoints2 shape : " << keypoints2.size() << endl;
-        
-            // // cv::Mat visualization;
-            // cv::Mat visualization;
-            // cv::hconcat(framekeypoints, prevkeypoints, visualization);
-            // cv::imshow("visualization for the keypoint detection", visualization);
-
-
+            FeatureExtraction(frame, prev_frame, keypoints1, descriptor1, 
+                            keypoints2, descriptor2, goodMatches);
+            
+            // // 결과 출력
+            cv::Mat imgMatches;                   
+            drawMatches ( frame, keypoints1, prev_frame, keypoints2, goodMatches, imgMatches );
+            cv::imshow("visualization for the feautre matching ", imgMatches);
+            
+            // Video save
+            writer.write(imgMatches);
             if (cv::waitKey(1) == 'q'){
                 break;
             }
 
         }
-
         if (frame.empty()){
             break;
         }
@@ -61,5 +61,6 @@ int main() {
 
     }
     cap.release();
+    writer.release();
     return 0;
 }
